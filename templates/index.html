@@ -1,16 +1,202 @@
-Equipment Management
-Equipment ID
-Project Number
-Last Maintenance Date
-Max Flow
-Comments
-Action
-Save
-Delete
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        header {
+            background-color: #0078d4;
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #0078d4;
+            color: white;
+            cursor: pointer;
+            position: relative;
+        }
+        th::after {
+            content: '\25BC'; /* Downward triangle */
+            position: absolute;
+            right: 10px;
+            font-size: 0.8rem;
+            color: white;
+        }
+        .add-equipment {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .add-equipment input {
+            padding: 0.5rem;
+            flex: 1;
+        }
+        .add-equipment button {
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .add-equipment button:hover {
+            background-color: #005bb5;
+        }
+        select {
+            padding: 0.3rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        select.good {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        select.malfunction {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        select.withdraw {
+            background-color: #e2e3e5;
+            color: #6c757d;
+        }
+        .editable {
+            border: 1px dashed #ccc;
+            padding: 4px;
+            background-color: #fff;
+        }
+        .qrcode {
+            width: 100px;
+            height: 100px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Equipment Management</h1>
+    </header>
+    <div class="container">
+        <table id="equipmentTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Equipment ID</th>
+                    <th onclick="sortTable(1)">Project Number</th>
+                    <th onclick="sortTable(2)">Last Maintenance Date</th>
+                    <th onclick="sortTable(3)">Max Flow</th>
+                    <th onclick="sortTable(4)">Comments</th>
+                    <th>Action</th>
+                    <th class="qrcode-header hidden">QR Code</th>
+                    <th>Save</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Equipment items will be dynamically added here -->
+            </tbody>
+        </table>
+        <div class="add-equipment">
+            <input type="text" id="equipmentID" placeholder="Equipment ID">
+            <input type="text" id="projectNumber" placeholder="Project Number (Optional)">
+            <input type="date" id="lastMaintenance" placeholder="Enter last maintenance date here">
+            <input type="text" id="maxFlow" placeholder="Max Flow">
+            <input type="text" id="comments" placeholder="Comments">
+            <button onclick="addEquipment()">Add Equipment</button>
+            <button onclick="toggleQRCode()">Toggle QR Code Column</button>
+        </div>
+    </div>
 
+<script>
+    async function addEquipment() {
+        const equipmentID = document.getElementById('equipmentID').value;
+        const projectNumber = document.getElementById('projectNumber').value || null;
+        const lastMaintenance = document.getElementById('lastMaintenance').value;
+        const maxFlow = document.getElementById('maxFlow').value;
+        const comments = document.getElementById('comments').value;
 
+        if (!equipmentID || !lastMaintenance || !maxFlow || !comments) {
+            alert('Please fill in all mandatory fields.');
+            return;
+        }
 
+        const action = "good"; // Default action value
+        const addResponse = await fetch('/add_equipment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ equipmentID, projectNumber, lastMaintenance, maxFlow, comments, action })
+        });
 
+        if (addResponse.ok) {
+            alert('Equipment added successfully');
+            location.reload();
+        } else {
+            alert('Failed to add equipment');
+        }
+    }
 
-Add Equipment
-Toggle QR Code Column
+    async function fetchEquipment() {
+        const response = await fetch('/get_equipment');
+        const equipmentList = await response.json();
+        const tbody = document.querySelector('#equipmentTable tbody');
+        tbody.innerHTML = '';
+
+        equipmentList.forEach(eq => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td><span contenteditable="true" class="editable">${eq.equipmentID}</span></td>
+                <td><span contenteditable="true" class="editable">${eq.projectNumber || ''}</span></td>
+                <td><span contenteditable="true" class="editable">${eq.lastMaintenance}</span></td>
+                <td><span contenteditable="true" class="editable">${eq.maxFlow}</span></td>
+                <td><span contenteditable="true" class="editable">${eq.comments}</span></td>
+                <td>
+                    <select class="${eq.action}" onchange="updateSelectColor(this)">
+                        <option value="good" ${eq.action === 'good' ? 'selected' : ''}>Good Condition</option>
+                        <option value="malfunction" ${eq.action === 'malfunction' ? 'selected' : ''}>Malfunction</option>
+                        <option value="withdraw" ${eq.action === 'withdraw' ? 'selected' : ''}>Withdraw</option>
+                    </select>
+                </td>
+                <td class="qrcode hidden"><div id="qrcode-${eq.equipmentID}"></div></td>
+                <td><button onclick="saveEquipment('${eq.equipmentID}')">Save</button></td>
+                <td><button onclick="deleteEquipment('${eq.equipmentID}')">Delete</button></td>`;
+            new QRCode(document.getElementById(`qrcode-${eq.equipmentID}`), `${window.location.origin}/equipment/${eq.equipmentID}`);
+        });
+    }
+
+    function toggleQRCode() {
+        const qrCodeHeader = document.querySelector('.qrcode-header');
+        document.querySelectorAll('.qrcode').forEach(cell => cell.classList.toggle('hidden'));
+        qrCodeHeader.classList.toggle('hidden');
+    }
+
+    window.onload = fetchEquipment;
+</script>
+</body>
+</html>
