@@ -74,7 +74,7 @@ def equipment_details(equipment_id):
     return render_template('equipment_detail.html', equipment=equipment)
 
 # Initialize database
-@app.before_request
+@app.before_first_request
 def create_tables():
     db.create_all()
 
