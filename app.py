@@ -24,8 +24,8 @@ class Equipment(db.Model):
 
 # Home route
 @app.route('/')
-def home():
-    return "Welcome to Equipment Management System"
+def index():
+    return render_template('index.html')
 
 # Route to fetch all data
 @app.route('/all_data', methods=['GET'])
