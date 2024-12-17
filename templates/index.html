@@ -189,7 +189,11 @@
             new QRCode(document.getElementById(`qrcode-${eq.equipmentID}`), `${window.location.origin}/equipment/${eq.equipmentID}`);
         });
     }
-
+function updateSelectColor(selectElement) {
+        const classList = selectElement.classList;
+        classList.remove('good', 'malfunction', 'withdraw');
+        classList.add(selectElement.value);
+    }
     function toggleQRCode() {
         const qrCodeHeader = document.querySelector('.qrcode-header');
         document.querySelectorAll('.qrcode').forEach(cell => cell.classList.toggle('hidden'));
