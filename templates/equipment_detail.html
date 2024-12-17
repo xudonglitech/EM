@@ -47,7 +47,7 @@
 <body>
     <div class="container">
         <h2>Equipment Details</h2>
-        <form method="POST" id="equipmentForm">
+        <form method="POST">
             <label for="equipment_id">Equipment ID</label>
             <input type="text" id="equipment_id" name="equipment_id" value="{{ equipment.equipment_id }}" readonly>
 
@@ -73,37 +73,5 @@
             <button type="submit">Save</button>
         </form>
     </div>
-
-    <!-- JavaScript to handle form submission and show alert -->
-    <script>
-        document.getElementById('equipmentForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
-            
-            const formData = new FormData(this);
-            const data = {};
-            formData.forEach((value, key) => {
-                data[key] = value; // Convert form data to JSON object
-            });
-
-            // Send the data to the server
-            fetch('/save-equipment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Equipment saved successfully!'); // Show success pop-up
-                    window.location.reload(); // Reload page or redirect if needed
-                } else {
-                    alert('Failed to save equipment.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while saving the equipment.');
-            });
-        });
-    </script>    
 </body>
 </html>
