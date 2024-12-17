@@ -189,10 +189,65 @@
             new QRCode(document.getElementById(`qrcode-${eq.equipmentID}`), `${window.location.origin}/equipment/${eq.equipmentID}`);
         });
     }
-function updateSelectColor(selectElement) {
+    function updateSelectColor(selectElement) {
         const classList = selectElement.classList;
         classList.remove('good', 'malfunction', 'withdraw');
         classList.add(selectElement.value);
+    }
+        function sortTable(columnIndex) {
+        const table = document.getElementById("equipmentTable");
+        const rows = Array.from(table.rows).slice(1); // Exclude header row
+        const isAscending = table.getAttribute("data-sort-order") !== "asc";
+
+        rows.sort((a, b) => {
+            const aText = a.cells[columnIndex].innerText.trim();
+            const bText = b.cells[columnIndex].innerText.trim();
+
+            if (!isNaN(aText) && !isNaN(bText)) {
+                return isAscending ? aText - bText : bText - aText;
+            }
+            return isAscending ? aText.localeCompare(bText) : bText.localeCompare(aText);
+        });
+
+        rows.forEach(row => table.tBodies[0].appendChild(row)); // Re-append rows in sorted order
+
+        table.setAttribute("data-sort-order", isAscending ? "asc" : "desc");
+    }
+    async function saveEquipment(equipmentID) {
+        const row = [...document.querySelectorAll('#equipmentTable tbody tr')].find(row => row.children[0].innerText === equipmentID);
+        const updatedEquipment = {
+            equipmentID,
+            projectNumber: row.children[1].innerText,
+            lastMaintenance: row.children[2].innerText,
+            maxFlow: row.children[3].innerText,
+            comments: row.children[4].innerText,
+            action: row.children[5].querySelector('select').value
+        };
+
+        const response = await fetch('/update_equipment', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedEquipment)
+        });
+
+        if (response.ok) {
+            alert('Changes saved successfully');
+        } else {
+            alert('Failed to save changes');
+        }
+    }
+
+    async function deleteEquipment(equipmentID) {
+        const response = await fetch(`/delete_equipment/${equipmentID}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            alert('Equipment deleted successfully');
+            location.reload();
+        } else {
+            alert('Failed to delete equipment');
+        }
     }
     function toggleQRCode() {
         const qrCodeHeader = document.querySelector('.qrcode-header');
